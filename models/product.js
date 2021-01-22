@@ -1,36 +1,32 @@
-const fs = require('fs'); //imports filesystem module
-const path = require('path');
+const db = require('../util/database');
 
-const pathDirectory = require('../util/path');
-
-const p = path.join(pathDirectory, 'data', 'products.json');
-
-const getProductsFromFile = (cb) => {
-    fs.readFile(p, (err, fileContent) => {
-      if (err) {
-        return cb ([]);
-      } else {
-        cb(JSON.parse(fileContent));//returns json file as an array
-      }
-    });
-}
+const Cart = require('./cart');
 
 module.exports = class Product {
-  constructor(title) {
+  constructor(id, title, imageUrl, description, price) {
+    this.id = id;
     this.title = title;
+    this.imageUrl = imageUrl;
+    this.description = description;
+    this.price = price;
   }
-
+  //? marks security for sql injection
   save() {
-    //stores the data in a json file in the products folder
-    getProductsFromFile(products => {
-      products.push(this);
-      fs.writeFile(p, JSON.stringify(products), (err) => {
-        console.log(err);
-      });
-    });
+    return db.execute(
+      'INSERT INTO products (title, price, imageUrl, description) VALUES (?, ?, ?, ?)',
+    [this.title, this.price, this.imageUrl, this.description]
+    );    
   }
 
-  static fetchAll(cb) {
-    getProductsFromFile(cb);
+  static deleteById(id) {
+    
+  }
+
+  static fetchAll() {
+   return db.execute('SELECT * FROM products');
+  }
+
+  static findById(id) {
+    return db.execute('SELECT * FROM products WHERE products.id = ?', [id]);
   }
 };
